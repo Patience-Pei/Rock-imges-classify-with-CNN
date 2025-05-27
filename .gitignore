@@ -1,5 +1,5 @@
-# 模型文件 (太大，不适合Git)
-*.pth
+# 模型文件 (使用Git LFS管理)
+# *.pth  # 现在通过Git LFS管理
 *.pkl
 *.h5
 *.ckpt
