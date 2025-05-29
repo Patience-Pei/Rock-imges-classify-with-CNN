@@ -171,6 +171,31 @@ class EfficientNetModel(nn.Module):
     def forward(self, x):
         return self.backbone(x)
 
+class Inception(nn.Module):
+    """基于 Inception 的迁移学习模型"""
+    def __init__(self, model_name='inception_v3', num_classes=9, pretrained=True, dropout_rate=0.5):
+        super(Inception, self).__init__()
+
+        # 加载预训练模型
+        self.backbone = models.inception_v3(pretrained=pretrained)
+        num_features = self.backbone.fc.in_features
+
+        # 禁用辅助分类器
+        self.backbone.aux_logits = False
+
+        # 替换分类器
+        self.backbone.fc = nn.Sequential(
+            nn.Dropout(dropout_rate),
+            nn.Linear(num_features, 512),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout_rate),
+            nn.Linear(512, num_classes)
+        )
+    
+    def forward(self, x):
+        return self.backbone(x)
+
+
 def get_model(model_type='resnet50', num_classes=9, pretrained=True, dropout_rate=0.5):
     """获取指定类型的模型"""
     
@@ -185,6 +210,13 @@ def get_model(model_type='resnet50', num_classes=9, pretrained=True, dropout_rat
         )
     elif model_type.startswith('efficientnet'):
         return EfficientNetModel(
+            model_name=model_type, 
+            num_classes=num_classes, 
+            pretrained=pretrained, 
+            dropout_rate=dropout_rate
+        )
+    elif model_type.startswith('inception'):
+        return Inception(
             model_name=model_type, 
             num_classes=num_classes, 
             pretrained=pretrained, 

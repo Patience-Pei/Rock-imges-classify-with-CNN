@@ -19,7 +19,7 @@ class Config:
     RESULTS_DIR = 'results'
     
     # 数据参数
-    IMAGE_SIZE = 224  # 改为224以适配预训练模型
+    IMAGE_SIZE = 299
     BATCH_SIZE = 32   # 减小batch size以适应更大的模型
     NUM_WORKERS = 4
     NUM_CLASSES = 9

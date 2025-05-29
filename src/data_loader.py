@@ -132,7 +132,7 @@ class DataManager:
             pin_memory=True if self.config.DEVICE.type == 'cuda' else False
         )
         
-        return train_loader, valid_loader, test_loader
+        return train_loader, valid_loader, test_loader, train_dataset.classes
     
     def get_class_names(self):
         """获取类别名称"""
@@ -156,3 +156,58 @@ class DataManager:
             info['valid_size'] = len(valid_dataset)
         
         return info
+    
+    def get_optimized_data_loaders(batch_size=32, num_workers=4, mode='full'):
+        """获取优化的数据加载器"""
+        # 根据模式调整数据增强强度
+        if mode == 'quick':
+            # 快速模式：最简单的增强
+            train_transform = transforms.Compose([
+                transforms.Resize((224, 224)),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+        elif mode == 'fast':
+            # 快速训练：中等增强
+            train_transform = transforms.Compose([
+                transforms.Resize((224, 224)),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.RandomRotation(15),
+                transforms.ColorJitter(brightness=0.1, contrast=0.1),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+        else:
+            # 完整模式：强数据增强
+            train_transform = transforms.Compose([
+                transforms.Resize((224, 224)),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.RandomVerticalFlip(0.3),
+                transforms.RandomRotation(30),
+                transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+                # transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+
+        test_transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+
+        # 加载数据集
+        train_dataset = datasets.ImageFolder('Rock Data/train', transform=train_transform)
+        valid_dataset = datasets.ImageFolder('Rock Data/valid', transform=test_transform)
+        test_dataset = datasets.ImageFolder('Rock Data/test', transform=test_transform)
+
+        # 创建数据加载器
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
+                                num_workers=num_workers, pin_memory=torch.cuda.is_available())
+        valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False,
+                                num_workers=num_workers, pin_memory=torch.cuda.is_available())
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
+                                num_workers=num_workers, pin_memory=torch.cuda.is_available())
+
+        return train_loader, valid_loader, test_loader, train_dataset.classes
