@@ -78,7 +78,7 @@ def parse_arguments():
     parser.add_argument('--model', type=str, default='resnet50',
                        choices=['resnet18', 'resnet34', 'resnet50', 'resnet101',
                                'efficientnet_b0', 'efficientnet_b1', 'custom_cnn',
-                               'inception_v3'],
+                               'inception_v3', 'densenet121', 'densenet161'],
                        help='选择模型架构 (默认: resnet50)')
 
     # 训练参数

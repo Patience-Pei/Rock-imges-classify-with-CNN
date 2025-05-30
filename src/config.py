@@ -63,7 +63,7 @@ class Config:
     
     # 集成学习参数
     ENSEMBLE = True
-    ENSEMBLE_MODELS = ['resnet50', 'resnet18', 'efficientnet_b0']
+    ENSEMBLE_MODELS = ['resnet50', 'inception_v3', 'efficientnet_b0']
     
     # 损失函数
     LOSS_FUNCTION = 'cross_entropy'  # 'cross_entropy', 'focal_loss', 'label_smoothing'

@@ -195,6 +195,30 @@ class Inception(nn.Module):
     def forward(self, x):
         return self.backbone(x)
 
+class DenseNet(nn.Module):
+    """基于 denseNet 的迁移学习模型"""
+    def __init__(self, model_name = 'densenet121', num_classes=9, pretrained=True, dropout_rate=0.5):
+        super(DenseNet, self).__init__()
+
+        # 加载预训练模型
+        if (model_name == 'densenet121'):
+            self.backbone = models.densenet121(pretrained=pretrained)
+            num_features = self.backbone.classifier.in_features
+        elif (model_name == 'densenet161'):
+            self.backbone = models.densenet161(pretrained=pretrained)
+            num_features = self.backbone.classifier.in_features
+
+        # 替换分类器
+        self.backbone.classifier = nn.Sequential(
+            nn.Dropout(dropout_rate),
+            nn.Linear(num_features, 512),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout_rate),
+            nn.Linear(512, num_classes)
+        )
+    
+    def forward(self, x):
+        return self.backbone(x)
 
 def get_model(model_type='resnet50', num_classes=9, pretrained=True, dropout_rate=0.5):
     """获取指定类型的模型"""
@@ -217,6 +241,13 @@ def get_model(model_type='resnet50', num_classes=9, pretrained=True, dropout_rat
         )
     elif model_type.startswith('inception'):
         return Inception(
+            model_name=model_type, 
+            num_classes=num_classes, 
+            pretrained=pretrained, 
+            dropout_rate=dropout_rate
+        )
+    elif model_type.startswith('densenet'):
+        return DenseNet(
             model_name=model_type, 
             num_classes=num_classes, 
             pretrained=pretrained, 
