@@ -78,7 +78,7 @@ def parse_arguments():
     parser.add_argument('--model', type=str, default='resnet50',
                        choices=['resnet18', 'resnet34', 'resnet50', 'resnet101',
                                'efficientnet_b0', 'efficientnet_b1', 'custom_cnn',
-                               'inception_v3', 'densenet121', 'densenet161'],
+                               'efficientnet_b2', 'inception_v3'],
                        help='选择模型架构 (默认: resnet50)')
 
     # 训练参数
@@ -107,7 +107,7 @@ def parse_arguments():
     parser.add_argument('--ensemble', action='store_true',
                        help='是否使用集成学习')
     parser.add_argument('--ensemble_models', nargs='+',
-                       default=['resnet18', 'resnet34', 'resnet50'],
+                       default=['resnet50', 'inception_v3', 'efficientnet_b0'],
                        help='集成学习使用的模型列表')
 
     # 训练模式
@@ -147,7 +147,7 @@ def update_config(args):
 
     # 集成学习
     Config.ENSEMBLE = args.ensemble
-    Config.ENSEMBLE_MODELS = args.ensemble_models
+    # Config.ENSEMBLE_MODELS = args.ensemble_models
 
     # 系统设置
     Config.MIXED_PRECISION = args.mixed_precision and torch.cuda.is_available()

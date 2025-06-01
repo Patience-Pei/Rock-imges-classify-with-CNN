@@ -11,7 +11,6 @@ from config import Config
 
 class ImprovedCNN(nn.Module):
     """改进的CNN模型"""
-    
     def __init__(self, num_classes=9, dropout_rate=0.5):
         super(ImprovedCNN, self).__init__()
         
@@ -128,7 +127,13 @@ class ResNetModel(nn.Module):
         else:
             raise ValueError(f"Unsupported model: {model_name}")
         
-        # 替换最后的全连接层
+        # 冻结模型的前三层
+        for param in self.backbone.parameters():
+            param.requires_grad = False
+        for param in self.backbone.layer4.parameters():
+            param.requires_grad = True
+        
+        # 替换并解冻最后的全连接层
         self.backbone.fc = nn.Sequential(
             nn.Dropout(dropout_rate),
             nn.Linear(num_features, 512),
@@ -136,6 +141,8 @@ class ResNetModel(nn.Module):
             nn.Dropout(dropout_rate),
             nn.Linear(512, num_classes)
         )
+        for param in self.backbone.fc.parameters():
+            param.requires_grad = True
     
     def forward(self, x):
         return self.backbone(x)
@@ -159,7 +166,14 @@ class EfficientNetModel(nn.Module):
         else:
             raise ValueError(f"Unsupported model: {model_name}")
         
-        # 替换分类器
+        # 解冻最后3个MBConv块
+        total_blocks = len(self.backbone.features)
+        blocks_to_unfreeze = 3
+        for i in range(total_blocks - blocks_to_unfreeze, total_blocks):
+            for param in self.backbone.features[i].parameters():
+                param.requires_grad = True
+        
+        # 替换并解冻分类器
         self.backbone.classifier = nn.Sequential(
             nn.Dropout(dropout_rate),
             nn.Linear(num_features, 512),
@@ -167,6 +181,8 @@ class EfficientNetModel(nn.Module):
             nn.Dropout(dropout_rate),
             nn.Linear(512, num_classes)
         )
+        for param in self.backbone.classifier.parameters():
+            param.requires_grad = True
     
     def forward(self, x):
         return self.backbone(x)
@@ -183,7 +199,15 @@ class Inception(nn.Module):
         # 禁用辅助分类器
         self.backbone.aux_logits = False
 
-        # 替换分类器
+        # 仅解冻最后两个Inception块 (Mixed_7b 和 Mixed_7c)
+        for param in self.backbone.parameters():
+            param.requires_grad = False
+        for param in self.backbone.Mixed_7b.parameters():
+            param.requires_grad = True
+        for param in self.backbone.Mixed_7c.parameters():
+            param.requires_grad = True
+
+        # 替换并解冻分类器
         self.backbone.fc = nn.Sequential(
             nn.Dropout(dropout_rate),
             nn.Linear(num_features, 512),
@@ -191,34 +215,18 @@ class Inception(nn.Module):
             nn.Dropout(dropout_rate),
             nn.Linear(512, num_classes)
         )
+        for param in self.backbone.fc.parameters():
+            param.requires_grad = True
     
     def forward(self, x):
         return self.backbone(x)
-
-class DenseNet(nn.Module):
-    """基于 denseNet 的迁移学习模型"""
-    def __init__(self, model_name = 'densenet121', num_classes=9, pretrained=True, dropout_rate=0.5):
-        super(DenseNet, self).__init__()
-
-        # 加载预训练模型
-        if (model_name == 'densenet121'):
-            self.backbone = models.densenet121(pretrained=pretrained)
-            num_features = self.backbone.classifier.in_features
-        elif (model_name == 'densenet161'):
-            self.backbone = models.densenet161(pretrained=pretrained)
-            num_features = self.backbone.classifier.in_features
-
-        # 替换分类器
-        self.backbone.classifier = nn.Sequential(
-            nn.Dropout(dropout_rate),
-            nn.Linear(num_features, 512),
-            nn.ReLU(inplace=True),
-            nn.Dropout(dropout_rate),
-            nn.Linear(512, num_classes)
-        )
     
-    def forward(self, x):
-        return self.backbone(x)
+class VGG(nn.Module):
+    def __init__(self, model_name='inception_v3', num_classes=9, pretrained=True, dropout_rate=0.5):
+        super(VGG, self).__init__()
+
+    # 加载预训练模型
+    
 
 def get_model(model_type='resnet50', num_classes=9, pretrained=True, dropout_rate=0.5):
     """获取指定类型的模型"""
@@ -241,13 +249,6 @@ def get_model(model_type='resnet50', num_classes=9, pretrained=True, dropout_rat
         )
     elif model_type.startswith('inception'):
         return Inception(
-            model_name=model_type, 
-            num_classes=num_classes, 
-            pretrained=pretrained, 
-            dropout_rate=dropout_rate
-        )
-    elif model_type.startswith('densenet'):
-        return DenseNet(
             model_name=model_type, 
             num_classes=num_classes, 
             pretrained=pretrained, 
