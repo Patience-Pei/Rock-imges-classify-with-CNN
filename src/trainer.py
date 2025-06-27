@@ -292,7 +292,6 @@ class Trainer:
         """完整的训练过程"""
         print("开始训练...")
         print(f"设备: {self.device}")
-        print(f"模型类型: {self.config.MODEL_TYPE}")
         print(f"训练轮数: {self.config.EPOCHS}")
         print("-" * 50)
 

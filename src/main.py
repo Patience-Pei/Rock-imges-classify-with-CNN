@@ -1,16 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 岩石图像分类 - 主训练脚本
-整合了所有最佳功能的完整训练解决方案
-
-功能特性:
-- 支持单模型和集成学习
-- 多种预训练模型选择
-- 智能数据增强和预处理
-- 高效训练策略和优化器
-- 完整的评估和可视化
-- GPU/CPU自适应训练
-- 命令行参数支持
 
 使用示例:
     # 快速测试
@@ -234,11 +224,6 @@ def train_single_model(args):
         print("\n📊 加载数据...")
         dataManager = DataManager()
         train_loader, valid_loader, test_loader, class_names = dataManager.get_data_loaders()
-        # train_loader, valid_loader, test_loader, class_names = get_optimized_data_loaders(
-        #     batch_size=Config.BATCH_SIZE,
-        #     num_workers=Config.NUM_WORKERS,
-        #     mode=args.mode
-        # )
 
         print(f"   训练样本: {len(train_loader.dataset):,}")
         print(f"   验证样本: {len(valid_loader.dataset):,}")
@@ -339,11 +324,6 @@ def train_ensemble_models(args):
         print("\n📊 加载数据...")
         dataManager = DataManager()
         train_loader, valid_loader, test_loader, class_names = dataManager.get_data_loaders()
-        # train_loader, valid_loader, test_loader, class_names = get_optimized_data_loaders(
-        #     batch_size=Config.BATCH_SIZE,
-        #     num_workers=Config.NUM_WORKERS,
-        #     mode=args.mode
-        # )
 
         print(f"   训练样本: {len(train_loader.dataset):,}")
         print(f"   验证样本: {len(valid_loader.dataset):,}")

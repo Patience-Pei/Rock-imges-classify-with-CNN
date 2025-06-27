@@ -222,6 +222,7 @@ class Inception(nn.Module):
         return self.backbone(x)
 
 class VGG(nn.Module):
+    """基于 VGG 的迁移学习模型"""
     def __init__(self, model_name='vgg16', num_classes=9, pretrained=True, dropout_rate=0.5):
         super(VGG, self).__init__()
 
@@ -293,27 +294,3 @@ def get_model(model_type='resnet50', num_classes=9, pretrained=True, dropout_rat
         )
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
-
-class ModelEnsemble(nn.Module):
-    """模型集成类"""
-    
-    def __init__(self, models, weights=None):
-        super(ModelEnsemble, self).__init__()
-        self.models = nn.ModuleList(models)
-        self.weights = weights if weights is not None else [1.0] * len(models)
-        
-        # 归一化权重
-        total_weight = sum(self.weights)
-        self.weights = [w / total_weight for w in self.weights]
-    
-    def forward(self, x):
-        outputs = []
-        for model in self.models:
-            outputs.append(model(x))
-        
-        # 加权平均
-        ensemble_output = torch.zeros_like(outputs[0])
-        for i, output in enumerate(outputs):
-            ensemble_output += self.weights[i] * output
-        
-        return ensemble_output
