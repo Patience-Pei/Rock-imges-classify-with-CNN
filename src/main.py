@@ -78,7 +78,7 @@ def parse_arguments():
     parser.add_argument('--model', type=str, default='resnet50',
                        choices=['resnet18', 'resnet34', 'resnet50', 'resnet101',
                                'efficientnet_b0', 'efficientnet_b1', 'custom_cnn',
-                               'efficientnet_b2', 'inception_v3'],
+                               'efficientnet_b2', 'inception_v3', 'vgg11', 'vgg13', 'vgg16'],
                        help='选择模型架构 (默认: resnet50)')
 
     # 训练参数
@@ -441,6 +441,22 @@ def train_ensemble_models(args):
         print(f"{'集成模型':15s}: {ensemble_acc:.4f}")
         print(f"{'最佳单模型':15s}: {max(val_accuracies):.4f}")
         print(f"{'集成提升':15s}: {ensemble_acc - max(val_accuracies):+.4f}")
+
+        # 绘制结果
+        if Config.SAVE_PLOTS:
+            plot_confusion_matrix(
+                cm=results['confusion_matrix'],
+                class_names=class_names,
+                save_path=os.path.join(Config.RESULTS_DIR, 'confusion_matrix.png')
+            )
+
+            plot_class_performance(
+                precision=results['precision'],
+                recall=results['recall'],
+                f1=results['f1_score'],
+                class_names=class_names,
+                save_path=os.path.join(Config.RESULTS_DIR, 'class_performance.png')
+            )
 
         return ensemble_acc, results, models
 

@@ -220,13 +220,43 @@ class Inception(nn.Module):
     
     def forward(self, x):
         return self.backbone(x)
-    
+
 class VGG(nn.Module):
-    def __init__(self, model_name='inception_v3', num_classes=9, pretrained=True, dropout_rate=0.5):
+    def __init__(self, model_name='vgg16', num_classes=9, pretrained=True, dropout_rate=0.5):
         super(VGG, self).__init__()
 
-    # 加载预训练模型
-    
+        # 加载预训练模型
+        if model_name == 'vgg11':
+            self.backbone = models.vgg11(pretrained=pretrained)
+            num_features = self.backbone.classifier[6].in_features
+        elif model_name == 'vgg13':
+            self.backbone = models.vgg13(pretrained=pretrained)
+            num_features = self.backbone.classifier[6].in_features
+        elif model_name == 'vgg16':
+            self.backbone = models.vgg16(pretrained=pretrained)
+            num_features = self.backbone.classifier[6].in_features
+        else:
+            raise ValueError(f"Unsupported model: {model_name}")
+        
+        # 只解冻最后两个卷积块
+        # 块4（索引17-23）和块5（索引24-30）
+        for param in self.backbone.parameters():
+            param.requires_grad = False
+        for param in self.backbone.features[17:].parameters():
+            param.requires_grad = True
+
+        # 替换并解冻分类器
+        self.backbone.classifier[6] = nn.Sequential(
+            nn.Linear(num_features, 1024),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=dropout_rate),
+            nn.Linear(1024, num_classes)
+        )
+        for param in self.backbone.classifier.parameters():
+            param.requires_grad = True
+
+    def forward(self, x):
+        return self.backbone(x)
 
 def get_model(model_type='resnet50', num_classes=9, pretrained=True, dropout_rate=0.5):
     """获取指定类型的模型"""
@@ -249,6 +279,13 @@ def get_model(model_type='resnet50', num_classes=9, pretrained=True, dropout_rat
         )
     elif model_type.startswith('inception'):
         return Inception(
+            model_name=model_type, 
+            num_classes=num_classes, 
+            pretrained=pretrained, 
+            dropout_rate=dropout_rate
+        )
+    elif model_type.startswith('vgg'):
+        return VGG(
             model_name=model_type, 
             num_classes=num_classes, 
             pretrained=pretrained, 
